@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>독서 대나무숲 - 함께 나누는 독서 질문 공간</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Gowun Dodum', sans-serif;
+      background-color: #f2f7f4;
+    }
+    .font-jua {
+      font-family: 'Jua', sans-serif;
+    }
+    .bamboo-bg {
+      background-color: #e2efe8;
+      background-image: radial-gradient(#2d6a4f 0.5px, transparent 0.5px), radial-gradient(#2d6a4f 0.5px, #e2efe8 0.5px);
+      background-size: 20px 20px;
+      background-position: 0 0, 10px 10px;
+      background-opacity: 0.15;
+    }
+    .card-shadow {
+      box-shadow: 4px 6px 12px rgba(45, 106, 79, 0.12);
+    }
+  </style>
+</head>
+<body class="bamboo-bg min-h-screen text-gray-800 flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-emerald-800 text-white shadow-lg py-4 px-6 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">🎋</span>
+        <div>
+          <h1 class="text-2xl font-jua tracking-wide">독서 대나무숲</h1>
+          <p class="text-xs text-emerald-200">생각을 자유롭게 털어놓는 우리들의 독서 질문 공간</p>
+        </div>
+      </div>
+      <div id="room-info-bar" class="hidden flex items-center gap-4 bg-emerald-900/60 px-4 py-2 rounded-xl border border-emerald-600">
+        <div class="text-sm">
+          <span class="text-emerald-300 font-bold" id="bar-book-title">도서명</span>
+          <span class="mx-1 text-emerald-400">|</span>
+          <span class="text-white font-semibold" id="bar-room-title">방 제목</span>
+        </div>
+        <div class="bg-amber-400 text-emerald-950 px-3 py-1 rounded-lg font-bold text-sm shadow">
+          초대코드: <span id="bar-invite-code" class="tracking-widest font-mono text-base">------</span>
+        </div>
+        <button onclick="exitRoom()" class="text-xs bg-emerald-700 hover:bg-emerald-600 px-2 py-1 rounded text-emerald-100 transition">
+          <i class="fa-solid fa-right-from-bracket mr-1"></i>나가기
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6">
+
+    <!-- LOGIN / ROOM CREATION VIEW -->
+    <div id="auth-view" class="max-w-md mx-auto my-10 bg-white/95 backdrop-blur-sm rounded-3xl p-8 shadow-xl border-2 border-emerald-200">
+      <div class="text-center mb-8">
+        <span class="text-5xl inline-block mb-2">🎍</span>
+        <h2 class="text-2xl font-jua text-emerald-900">독서 대나무숲 입장하기</h2>
+        <p class="text-sm text-gray-500 mt-1">질문으로 깊어지는 생각의 숲</p>
+      </div>
+
+      <!-- Mode Selector Tabs -->
+      <div class="flex bg-emerald-100 p-1 rounded-2xl mb-6">
+        <button id="tab-student" onclick="switchTab('student')" class="flex-1 py-2 rounded-xl font-bold text-sm transition bg-white text-emerald-800 shadow-sm">
+          👨‍🎓 학생 (초대코드로 입장)
+        </button>
+        <button id="tab-teacher" onclick="switchTab('teacher')" class="flex-1 py-2 rounded-xl font-bold text-sm transition text-emerald-600 hover:text-emerald-800">
+          👩‍🏫 선생님 (대나무숲 만들기)
+        </button>
+      </div>
+
+      <!-- Student Form -->
+      <form id="student-form" onsubmit="handleStudentJoin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-emerald-800 mb-1">이름 또는 닉네임</label>
+          <input type="text" id="student-name" required placeholder="예: 3학년 김독서" class="w-full px-4 py-3 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-emerald-800 mb-1">선생님이 주신 6자리 초대코드</label>
+          <input type="text" id="student-code" required maxlength="6" placeholder="예: B9A2K7" class="w-full px-4 py-3 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-mono tracking-widest uppercase">
+        </div>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-jua py-3 rounded-xl text-lg shadow-md transition transform active:scale-98">
+          대나무숲 들어가기 🎋
+        </button>
+      </form>
+
+      <!-- Teacher Form -->
+      <form id="teacher-form" onsubmit="handleTeacherCreate(event)" class="space-y-4 hidden">
+        <div>
+          <label class="block text-xs font-bold text-emerald-800 mb-1">방 제목 (학급명 등)</label>
+          <input type="text" id="teacher-room" required placeholder="예: 5학년 2반 독서 대나무숲" class="w-full px-4 py-3 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-emerald-800 mb-1">함께 읽는 책 제목</label>
+          <input type="text" id="teacher-book" required placeholder="예: 자전거 도둑" class="w-full px-4 py-3 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-emerald-800 mb-1">선생님 이름</label>
+          <input type="text" id="teacher-name" required placeholder="예: 박선생님" class="w-full px-4 py-3 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+        </div>
+        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-jua py-3 rounded-xl text-lg shadow-md transition transform active:scale-98">
+          새 대나무숲 열기 ✨
+        </button>
+      </form>
+    </div>
+
+    <!-- BOARD VIEW (Padlet Style) -->
+    <div id="board-view" class="hidden space-y-6">
+
+      <!-- Question Input Form Box -->
+      <div class="bg-white/95 rounded-2xl p-5 shadow-lg border border-emerald-200">
+        <h3 class="text-base font-jua text-emerald-900 mb-3 flex items-center gap-2">
+          <span>✍️</span> 책을 읽고 떠오른 질문을 대나무숲에 외쳐보세요!
+        </h3>
+        <form onsubmit="handleAddQuestion(event)" class="space-y-3">
+          <div class="flex flex-wrap gap-2 mb-2">
+            <span class="text-xs font-bold text-emerald-800 self-center mr-1">질문 유형:</span>
+            <button type="button" onclick="selectCategory('인물')" class="cat-btn px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border-2 border-emerald-400">💚 인물의 마음 질문</button>
+            <button type="button" onclick="selectCategory('만약에')" class="cat-btn px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border-2 border-transparent">🍃 만약에? 질문</button>
+            <button type="button" onclick="selectCategory('세상')" class="cat-btn px-3 py-1.5 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border-2 border-transparent">🎋 세상을 바꾸는 질문</button>
+            <button type="button" onclick="selectCategory('자유')" class="cat-btn px-3 py-1.5 rounded-full text-xs font-bold bg-purple-50 text-purple-800 border-2 border-transparent">💡 나만의 자유 질문</button>
+          </div>
+          <div class="flex gap-2">
+            <textarea id="question-text" required rows="2" placeholder="예: 수남이가 도둑질을 했을 때 마음속에는 어떤 생각이 들었을까?" class="flex-1 p-3 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm resize-none"></textarea>
+            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-jua px-6 rounded-xl shadow-md transition flex items-center justify-center text-base whitespace-nowrap">
+              질문 제출 🚀
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Action Bar -->
+      <div class="flex justify-between items-center px-2">
+        <div class="text-sm font-bold text-emerald-900">
+          모인 질문 <span id="question-count" class="text-emerald-600 font-mono text-base">0</span>개
+        </div>
+        <div class="flex gap-2">
+          <button onclick="addSimulatedQuestion()" class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-3 py-1.5 rounded-lg border border-amber-300 transition">
+            🎲 친구 질문 예시 추가 (테스트)
+          </button>
+          <button onclick="window.print()" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-3 py-1.5 rounded-lg border border-gray-300 transition">
+            🖨️ 인쇄하기
+          </button>
+        </div>
+      </div>
+
+      <!-- Padlet Card Grid -->
+      <div id="questions-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Dynamic Cards Inserted Here -->
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    let currentUser = { name: '', role: '', roomCode: '' };
+    let currentCategory = '인물';
+    let questions = [];
+
+    const categoryStyles = {
+      '인물': { bg: 'bg-emerald-50', border: 'border-emerald-300', tag: '💚 인물의 마음', tagBg: 'bg-emerald-200 text-emerald-900' },
+      '만약에': { bg: 'bg-amber-50', border: 'border-amber-300', tag: '🍃 만약에?', tagBg: 'bg-amber-200 text-amber-900' },
+      '세상': { bg: 'bg-blue-50', border: 'border-blue-300', tag: '🎋 세상을 바꾸는', tagBg: 'bg-blue-200 text-blue-900' },
+      '자유': { bg: 'bg-purple-50', border: 'border-purple-300', tag: '💡 자유 질문', tagBg: 'bg-purple-200 text-purple-900' }
+    };
+
+    function switchTab(tab) {
+      document.getElementById('tab-student').className = tab === 'student' ? 'flex-1 py-2 rounded-xl font-bold text-sm transition bg-white text-emerald-800 shadow-sm' : 'flex-1 py-2 rounded-xl font-bold text-sm transition text-emerald-600 hover:text-emerald-800';
+      document.getElementById('tab-teacher').className = tab === 'teacher' ? 'flex-1 py-2 rounded-xl font-bold text-sm transition bg-white text-emerald-800 shadow-sm' : 'flex-1 py-2 rounded-xl font-bold text-sm transition text-emerald-600 hover:text-emerald-800';
+      document.getElementById('student-form').classList.toggle('hidden', tab !== 'student');
+      document.getElementById('teacher-form').classList.toggle('hidden', tab !== 'teacher');
+    }
+
+    function generateCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let code = '';
+      for(let i=0; i<6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+      return code;
+    }
+
+    function handleStudentJoin(e) {
+      e.preventDefault();
+      const name = document.getElementById('student-name').value;
+      const code = document.getElementById('student-code').value.toUpperCase();
+      currentUser = { name, role: 'student', roomCode: code };
+      enterBoard('온라인 독서 수업', '우리가 읽는 책', code);
+    }
+
+    function handleTeacherCreate(e) {
+      e.preventDefault();
+      const room = document.getElementById('teacher-room').value;
+      const book = document.getElementById('teacher-book').value;
+      const name = document.getElementById('teacher-name').value;
+      const code = generateCode();
+      currentUser = { name, role: 'teacher', roomCode: code };
+      enterBoard(room, book, code);
+    }
+
+    function enterBoard(room, book, code) {
+      document.getElementById('auth-view').classList.add('hidden');
+      document.getElementById('board-view').classList.remove('hidden');
+      document.getElementById('room-info-bar').classList.remove('hidden');
+
+      document.getElementById('bar-room-title').innerText = room;
+      document.getElementById('bar-book-title').innerText = book;
+      document.getElementById('bar-invite-code').innerText = code;
+
+      // Seed initial example data
+      if(questions.length === 0) {
+        addQuestion('박선생님', '자유', '오늘 책에서 가장 인상 깊었던 장면은 어디였나요?', '10분 전');
+      }
+    }
+
+    function exitRoom() {
+      if(confirm('대나무숲에서 나가시겠습니까?')) {
+        location.reload();
+      }
+    }
+
+    function selectCategory(cat) {
+      currentCategory = cat;
+      const btns = document.querySelectorAll('.cat-btn');
+      btns.forEach(btn => {
+        if(btn.innerText.includes(cat)) {
+          btn.className = 'cat-btn px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border-2 border-emerald-400';
+        } else {
+          btn.className = 'cat-btn px-3 py-1.5 rounded-full text-xs font-bold bg-gray-50 text-gray-600 border-2 border-transparent';
+        }
+      });
+    }
+
+    function handleAddQuestion(e) {
+      e.preventDefault();
+      const input = document.getElementById('question-text');
+      const text = input.value.trim();
+      if(!text) return;
+
+      addQuestion(currentUser.name, currentCategory, text, '방금 전');
+      input.value = '';
+    }
+
+    function addQuestion(author, category, text, time) {
+      const q = {
+        id: Date.now() + Math.random(),
+        author,
+        category,
+        text,
+        time,
+        likes: 0,
+        liked: false,
+        comments: []
+      };
+      questions.unshift(q);
+      renderQuestions();
+    }
+
+    function toggleLike(id) {
+      const q = questions.find(item => item.id === id);
+      if(q) {
+        if(q.liked) { q.likes--; q.liked = false; }
+        else { q.likes++; q.liked = true; }
+        renderQuestions();
+      }
+    }
+
+    function addComment(id, event) {
+      event.preventDefault();
+      const input = document.getElementById(`comment-input-${id}`);
+      const text = input.value.trim();
+      if(!text) return;
+
+      const q = questions.find(item => item.id === id);
+      if(q) {
+        q.comments.push({ author: currentUser.name || '익명 친구', text });
+        renderQuestions();
+      }
+    }
+
+    function renderQuestions() {
+      const grid = document.getElementById('questions-grid');
+      document.getElementById('question-count').innerText = questions.length;
+      grid.innerHTML = '';
+
+      questions.forEach(q => {
+        const style = categoryStyles[q.category] || categoryStyles['자유'];
+        const card = document.createElement('div');
+        card.className = `${style.bg} ${style.border} border-2 rounded-2xl p-5 card-shadow flex flex-col justify-between transition hover:-translate-y-1 duration-200 relative`;
+        
+        card.innerHTML = `
+          <div>
+            <div class="flex justify-between items-start mb-3">
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full ${style.tagBg}">${style.tag}</span>
+              <span class="text-xs text-gray-400 font-mono">${q.time}</span>
+            </div>
+            <p class="text-gray-800 text-base font-medium leading-relaxed mb-4 whitespace-pre-wrap">"${q.text}"</p>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center text-xs text-gray-500 pt-3 border-t border-gray-200/60 mb-3">
+              <span class="font-bold text-gray-700">✍️ ${q.author}</span>
+              <button onclick="toggleLike(${q.id})" class="flex items-center gap-1 font-bold ${q.liked ? 'text-red-500' : 'text-gray-400 hover:text-red-400'} transition">
+                <i class="${q.liked ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                <span>나도 궁금해요 ${q.likes}</span>
+              </button>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="space-y-2 bg-white/60 rounded-xl p-2.5 border border-gray-100">
+              <div class="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+                ${q.comments.map(c => `
+                  <div class="text-xs bg-white p-2 rounded-lg border border-gray-100 shadow-2xs">
+                    <span class="font-bold text-emerald-800">${c.author}:</span>
+                    <span class="text-gray-700">${c.text}</span>
+                  </div>
+                `).join('')}
+                ${q.comments.length === 0 ? '<p class="text-xs text-gray-400 text-center py-1">첫 댓글을 남겨보세요!</p>' : ''}
+              </div>
+              <form onsubmit="addComment(${q.id}, event)" class="flex gap-1 mt-2">
+                <input type="text" id="comment-input-${q.id}" placeholder="생각 나누기..." class="flex-1 px-2 py-1 text-xs rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-emerald-400 bg-white">
+                <button type="submit" class="bg-emerald-600 text-white text-xs px-2.5 py-1 rounded-lg font-bold hover:bg-emerald-700">등록</button>
+              </form>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function addSimulatedQuestion() {
+      const sampleNames = ['김민준', '이서연', '박지호', '최아린', '정예준'];
+      const sampleQuestions = [
+        { cat: '인물', text: '주인공이 거짓말을 한 직후에는 기분이 어땠을까요?' },
+        { cat: '만약에', text: '만약 결말에서 주인공이 다른 선택을 했다면 이야기가 어떻게 바뀌었을까요?' },
+        { cat: '세상', text: '이 책에 나오는 문제가 오늘날 우리 사회에서도 일어나고 있나요?' }
+      ];
+      const name = sampleNames[Math.floor(Math.random() * sampleNames.length)];
+      const sample = sampleQuestions[Math.floor(Math.random() * sampleQuestions.length)];
+      
+      addQuestion(name, sample.cat, sample.text, '방금 전');
+    }
+  </script>
+</body>
+</html>
